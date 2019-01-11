@@ -1,0 +1,11 @@
+日志
+采用
+jupyter notebook环境，
+keras框架tensorflow backend
+思路
+三层全连接网络训练，
+记录网路
+导入数据得到flag
+flag:10001001110101110100111011011100100101111110000011001001
+心得：
+keras比tf简单多了
