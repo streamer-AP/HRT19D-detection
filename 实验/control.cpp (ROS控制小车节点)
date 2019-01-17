@@ -1,0 +1,85 @@
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include    <stdio.h>
+#include    <termios.h>
+#include    <unistd.h>
+#define PI 3.14159265358979323846
+
+#define FRAC_linear 0.5
+#define FRAC_angular 1
+
+
+//////////////////////////////////////////////////////////
+//函数:监测键盘输入(网上复制的)
+char read_a_char() 
+{
+    struct termios    info_orig, info;
+    char    ch;
+    tcgetattr(0, &info_orig);
+    info = info_orig;
+    info.c_lflag &= ~ICANON;
+    info.c_cc[VMIN] = 1;
+    tcsetattr(0, TCSANOW, &info);
+    scanf("%c", &ch);
+    tcsetattr(0, TCSANOW, &info_orig);
+    return ch;
+}
+
+
+int main(int argc, char **argv)
+{
+  char key;
+  ros::init(argc, argv, "control");   //"draw_rectangle"必须是nodename
+  std::string topic = "/husky_velocity_controller/cmd_vel"; //topic name
+  ros::NodeHandle n;
+  ros::Publisher cmdVelPub = n.advertise<geometry_msgs::Twist>(topic, 1);
+  //第一个参数也可以写成"/turtle1/cmd_vel"这样的topic name
+  //第二个参数是发布的缓冲区大小,<geometry_msgs::Twist>是消息类型
+  ros::Rate loopRate(100);
+  //与Rate::sleep();配合指定自循环频率
+  ROS_INFO("controlling...");//输出显示信息
+  geometry_msgs::Twist speed; // 控制信号载体 Twist message
+  
+  
+
+//声明一个geometry_msgs::Twist 类型的对象speed，并将速度的值赋值到这个对象里面 
+  while (ros::ok())
+  {
+  	///////////////////
+  	//限速度初始化
+    speed.linear.x = 0; // 设置线速度为1m/s，正为前进，负为后退
+    speed.linear.y = 0;
+    speed.linear.z = 0;
+    /////////////////////
+    //角速度初始化
+    speed.angular.x = 0;
+  	speed.angular.y = 0;
+  	speed.angular.z = 0;
+    
+    ///////////////////////////////////////////////////////////////
+    //键盘输入
+    key=read_a_char(); 
+    if(key=='a')
+    {
+	    speed.angular.z = FRAC_angular;
+	}
+    else if(key=='d')
+    {
+    	speed.angular.z = -1 * FRAC_angular;
+	}
+	else if(key=='w')
+    {
+    	speed.linear.x = FRAC_linear ;
+	}
+	else if(key=='s')
+    {
+    	speed.linear.x = -1*FRAC_linear;
+	}
+    
+    cmdVelPub.publish(speed); // 将刚才设置的指令发送给机器人
+    ros::spinOnce();//调用此函数给其他回调函数得以执行
+    loopRate.sleep();//按loopRate(5)设置的2HZ将程序挂起
+  }
+ 
+  return 0;
+}
